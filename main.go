@@ -5,6 +5,7 @@ import (
 	"image"
 	"image/color"
 	"log"
+	"math/rand"
 
 	"github.com/hajimehoshi/ebiten/v2"
 	"github.com/hajimehoshi/ebiten/v2/ebitenutil"
@@ -22,12 +23,19 @@ const (
 
 	ROW    = 3
 	COLUMN = 3
+
+	MESSAGE_WHOPLAYS  = "P%d turn"
+	MESSAGE_MOVES     = "Moves: %d"
+	MESSAGE_PLAYAGAIN = "P%d, move invalid!"
+	MESSAGE_DRAW      = "It's a Draw!"
+	MESSAGE_WINNER    = "P%d Wins!"
 )
 
 type Game struct {
-	moves  int
-	player *Player
-	board  *Board
+	moves   int
+	message string
+	player  *Player
+	board   *Board
 }
 
 type Player struct {
@@ -35,38 +43,85 @@ type Player struct {
 }
 
 type Board struct {
-	tiles []*Tile
+	tiles [][]*Tile
 }
 
 type Tile struct {
-	Img    *ebiten.Image
-	Value  int
-	Row    int
-	Column int
+	Img   *ebiten.Image
+	Value int
 }
 
 func (g *Game) Update() error {
 	handleClick(g)
+	//handleMatch(g)
 
 	return nil
 }
 
 func handleClick(g *Game) {
 	if inpututil.IsMouseButtonJustPressed(0) {
-		g.moves++
 		x, y := ebiten.CursorPosition()
-		fmt.Printf("Plays: %d\nX: %d\nY: %d\n", g.moves, x, y)
+		px, py := whereWasClicked(x, y)
 
-		g.player.IsPlaying = nextToPlay(g.player.IsPlaying)
+		if !isMoveValid(g, px, py) {
+			g.message = fmt.Sprintf(MESSAGE_PLAYAGAIN, g.player.IsPlaying)
+		} else {
+			g.moves++
+			g.player.IsPlaying = nextToPlay(g, g.player.IsPlaying)
+			g.message = fmt.Sprintf(MESSAGE_WHOPLAYS, g.player.IsPlaying)
+		}
 	}
 }
 
-func nextToPlay(whosPlaying int) int {
-	switch whosPlaying {
-	case 0:
-		return 1
+func isMoveValid(g *Game, px int, py int) bool {
+	if px != -1 && py != -1 {
+		return g.board.tiles[px][py].Value == -1
 	}
-	return 0
+	return false
+}
+
+func whereWasClicked(x int, y int) (int, int) {
+	if x > 0 && x < FRAME_HEIGTH*3 && y > 0 && y < FRAME_WIDTH*3 {
+		// row 0
+		if y > 0 && y < FRAME_HEIGTH {
+			if x > 0 && x < FRAME_WIDTH {
+				return 0, 0
+			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+				return 0, 1
+			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+				return 0, 2
+			}
+		}
+		// row 1
+		if y > FRAME_HEIGTH && y < FRAME_HEIGTH*2 {
+			if x > 0 && x < FRAME_WIDTH {
+				return 1, 0
+			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+				return 1, 1
+			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+				return 1, 2
+			}
+		}
+		// row 2
+		if y > FRAME_HEIGTH*2 && y < FRAME_HEIGTH*3 {
+			if x > 0 && x < FRAME_WIDTH {
+				return 2, 0
+			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+				return 2, 1
+			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+				return 2, 2
+			}
+		}
+	}
+	return -1, -1
+}
+
+func nextToPlay(g *Game, whosPlaying int) int {
+	switch whosPlaying {
+	case 1:
+		return 2
+	}
+	return 1
 }
 
 func (g *Game) Draw(screen *ebiten.Image) {
@@ -83,6 +138,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 }
 
 func main() {
+	firstToPlay := rand.Intn(2) + 1
 
 	tile, _, err := ebitenutil.NewImageFromFile("tiles.png")
 	if err != nil {
@@ -90,64 +146,52 @@ func main() {
 	}
 
 	game := Game{
+		message: fmt.Sprintf(MESSAGE_WHOPLAYS, firstToPlay),
+		moves:   0,
 		player: &Player{
-			IsPlaying: 0,
+			IsPlaying: firstToPlay,
 		},
 		board: &Board{
-			tiles: []*Tile{
+			tiles: [][]*Tile{
 				{
-					Img:    tile,
-					Value:  0,
-					Row:    0,
-					Column: 0,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    0,
-					Column: 1,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    0,
-					Column: 2,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    1,
-					Column: 0,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    1,
-					Column: 1,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    1,
-					Column: 2,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    2,
-					Column: 0,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    2,
-					Column: 1,
-				},
-				{
-					Img:    tile,
-					Value:  0,
-					Row:    2,
-					Column: 2,
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
+				}, {
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
+				}, {
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
+					{
+						Img:   tile,
+						Value: -1,
+					},
 				},
 			},
 		},
@@ -161,47 +205,43 @@ func main() {
 }
 
 func drawStats(g *Game, screen *ebiten.Image) {
-	var whosPlaying string
-	if g.player.IsPlaying == 0 {
-		whosPlaying = "Player 1 turn"
-	} else {
-		whosPlaying = "Player 2 turn"
-	}
-	moves := fmt.Sprintf("Moves: %d", g.moves)
+	moves := fmt.Sprintf(MESSAGE_MOVES, g.moves)
 
-	ebitenutil.DebugPrintAt(screen, whosPlaying, 0, 192)
+	ebitenutil.DebugPrintAt(screen, g.message, 0, 192)
 	ebitenutil.DebugPrintAt(screen, moves, 142, 192)
 }
 
 func drawTiles(g *Game, opts ebiten.DrawImageOptions, screen *ebiten.Image) {
-
-	for _, tile := range g.board.tiles {
-		switch tile.Value {
-		case 0:
-			opts.GeoM.Translate(float64(tile.Row)*64, float64(tile.Column)*64)
-			screen.DrawImage(
-				tile.Img.SubImage(
-					image.Rect(FRAME_OX, FRAME_OY, FRAME_WIDTH, FRAME_HEIGTH),
-				).(*ebiten.Image),
-				&opts,
-			)
-		case 1:
-			opts.GeoM.Translate(float64(tile.Row)*64, float64(tile.Column)*64)
-			screen.DrawImage(
-				tile.Img.SubImage(
-					image.Rect(FRAME_OX, FRAME_OY+64, FRAME_WIDTH, FRAME_HEIGTH*2),
-				).(*ebiten.Image),
-				&opts,
-			)
-		case 2:
-			opts.GeoM.Translate(float64(tile.Row)*64, float64(tile.Column)*64)
-			screen.DrawImage(
-				tile.Img.SubImage(
-					image.Rect(FRAME_OX, FRAME_OY+128, FRAME_WIDTH, FRAME_HEIGTH*3),
-				).(*ebiten.Image),
-				&opts,
-			)
+	for i := 0; i < ROW; i++ {
+		for j := 0; j < COLUMN; j++ {
+			tile := g.board.tiles[i][j]
+			switch tile.Value {
+			case -1:
+				opts.GeoM.Translate(float64(i)*64, float64(j)*64)
+				screen.DrawImage(
+					tile.Img.SubImage(
+						image.Rect(FRAME_OX, FRAME_OY, FRAME_WIDTH, FRAME_HEIGTH),
+					).(*ebiten.Image),
+					&opts,
+				)
+			case 1:
+				opts.GeoM.Translate(float64(i)*64, float64(j)*64)
+				screen.DrawImage(
+					tile.Img.SubImage(
+						image.Rect(FRAME_OX, FRAME_OY+64, FRAME_WIDTH, FRAME_HEIGTH*2),
+					).(*ebiten.Image),
+					&opts,
+				)
+			case 2:
+				opts.GeoM.Translate(float64(i)*64, float64(j)*64)
+				screen.DrawImage(
+					tile.Img.SubImage(
+						image.Rect(FRAME_OX, FRAME_OY+128, FRAME_WIDTH, FRAME_HEIGTH*3),
+					).(*ebiten.Image),
+					&opts,
+				)
+			}
+			opts.GeoM.Reset()
 		}
-		opts.GeoM.Reset()
 	}
 }
