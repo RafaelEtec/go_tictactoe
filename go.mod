@@ -1,4 +1,4 @@
-module github.com/RafaelEtec/go_tictactoe
+module github.com/rafaelEtec/go_tictactoe
 
 go 1.23.0
 
