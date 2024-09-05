@@ -139,7 +139,6 @@ func isMoveValid(g *Game, px int, py int) bool {
 
 func whereWasClicked(x int, y int) (int, int) {
 	if x >= 0 && x <= FRAME_WIDTH*3 && y >= 0 && y <= FRAME_HEIGTH*3 {
-		// row 0
 		if x >= 0 && x <= FRAME_WIDTH {
 			if y >= 0 && y <= FRAME_HEIGTH {
 				return 0, 0
@@ -149,7 +148,6 @@ func whereWasClicked(x int, y int) (int, int) {
 				return 0, 2
 			}
 		}
-		// row 1
 		if x >= FRAME_HEIGTH && x <= FRAME_HEIGTH*2 {
 			if y >= 0 && y <= FRAME_WIDTH {
 				return 1, 0
@@ -159,7 +157,6 @@ func whereWasClicked(x int, y int) (int, int) {
 				return 1, 2
 			}
 		}
-		// row 2
 		if x >= FRAME_HEIGTH*2 && x <= FRAME_HEIGTH*3 {
 			if y >= 0 && y <= FRAME_WIDTH {
 				return 2, 0
