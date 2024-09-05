@@ -40,6 +40,7 @@ type Game struct {
 
 type Player struct {
 	IsPlaying int
+	win       bool
 }
 
 type Board struct {
@@ -52,24 +53,51 @@ type Tile struct {
 }
 
 func (g *Game) Update() error {
-	handleClick(g)
-	//handleMatch(g)
+	if g.moves > 0 && !g.player.win {
+		handleMouseClick(g)
+		handleKeyPress(g)
+	}
 
 	return nil
 }
 
-func handleClick(g *Game) {
+func handleMouseClick(g *Game) {
 	if inpututil.IsMouseButtonJustPressed(0) {
 		x, y := ebiten.CursorPosition()
+		fmt.Printf("X: %d\nY: %d\n", x, y)
 		px, py := whereWasClicked(x, y)
+		fmt.Printf("X: %d\nY: %d\n", px, py)
 
 		if !isMoveValid(g, px, py) {
 			g.message = fmt.Sprintf(MESSAGE_PLAYAGAIN, g.player.IsPlaying)
 		} else {
-			g.moves++
-			g.player.IsPlaying = nextToPlay(g, g.player.IsPlaying)
+			g.moves--
+			g.board.tiles[px][py].Value = g.player.IsPlaying
+		}
+
+		handleBoard(g)
+		if g.player.win {
+			g.message = fmt.Sprintf(MESSAGE_WINNER, g.player.IsPlaying)
+		} else {
+			g.player.IsPlaying = nextToPlay(g.player.IsPlaying)
 			g.message = fmt.Sprintf(MESSAGE_WHOPLAYS, g.player.IsPlaying)
 		}
+	}
+}
+
+func restartGame(g *Game) {
+
+}
+
+func handleKeyPress(g *Game) {
+	if inpututil.IsKeyJustPressed(ebiten.KeySpace) {
+		restartGame(g)
+	}
+}
+
+func handleBoard(g *Game) {
+	if g.board.tiles[0][0].Value == 1 && g.board.tiles[0][1].Value == 1 && g.board.tiles[0][2].Value == 1 || g.board.tiles[0][0].Value == 2 && g.board.tiles[0][1].Value == 2 && g.board.tiles[0][2].Value == 2 {
+		g.player.win = true
 	}
 }
 
@@ -81,34 +109,34 @@ func isMoveValid(g *Game, px int, py int) bool {
 }
 
 func whereWasClicked(x int, y int) (int, int) {
-	if x > 0 && x < FRAME_HEIGTH*3 && y > 0 && y < FRAME_WIDTH*3 {
+	if x > 0 && x < FRAME_WIDTH*3 && y > 0 && y < FRAME_HEIGTH*3 {
 		// row 0
-		if y > 0 && y < FRAME_HEIGTH {
-			if x > 0 && x < FRAME_WIDTH {
+		if x > 0 && x < FRAME_WIDTH {
+			if y > 0 && y < FRAME_HEIGTH {
 				return 0, 0
-			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+			} else if y > FRAME_HEIGTH && y < FRAME_HEIGTH*2 {
 				return 0, 1
-			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+			} else if y > FRAME_HEIGTH*2 && y < FRAME_HEIGTH*3 {
 				return 0, 2
 			}
 		}
 		// row 1
-		if y > FRAME_HEIGTH && y < FRAME_HEIGTH*2 {
-			if x > 0 && x < FRAME_WIDTH {
+		if x > FRAME_HEIGTH && x < FRAME_HEIGTH*2 {
+			if y > 0 && y < FRAME_WIDTH {
 				return 1, 0
-			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+			} else if y > FRAME_WIDTH && y < FRAME_WIDTH*2 {
 				return 1, 1
-			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+			} else if y > FRAME_WIDTH*2 && y < FRAME_WIDTH*3 {
 				return 1, 2
 			}
 		}
 		// row 2
-		if y > FRAME_HEIGTH*2 && y < FRAME_HEIGTH*3 {
-			if x > 0 && x < FRAME_WIDTH {
+		if x > FRAME_HEIGTH*2 && x < FRAME_HEIGTH*3 {
+			if y > 0 && y < FRAME_WIDTH {
 				return 2, 0
-			} else if x > FRAME_WIDTH && x < FRAME_WIDTH*2 {
+			} else if y > FRAME_WIDTH && y < FRAME_WIDTH*2 {
 				return 2, 1
-			} else if x > FRAME_WIDTH*2 && x < FRAME_WIDTH*3 {
+			} else if y > FRAME_WIDTH*2 && y < FRAME_WIDTH*3 {
 				return 2, 2
 			}
 		}
@@ -116,7 +144,7 @@ func whereWasClicked(x int, y int) (int, int) {
 	return -1, -1
 }
 
-func nextToPlay(g *Game, whosPlaying int) int {
+func nextToPlay(whosPlaying int) int {
 	switch whosPlaying {
 	case 1:
 		return 2
@@ -147,7 +175,7 @@ func main() {
 
 	game := Game{
 		message: fmt.Sprintf(MESSAGE_WHOPLAYS, firstToPlay),
-		moves:   0,
+		moves:   9,
 		player: &Player{
 			IsPlaying: firstToPlay,
 		},
