@@ -22,7 +22,7 @@ go run github.com/rafaeletec/go_tictactoe@latest
 <summary>How to Play</summary>
   
 ✅ Mouse \
-✅ Keyboard
+❌ Keyboard
 
 Press space bar to Restart game
 
