@@ -4,7 +4,7 @@ You may use it for learning too!
 
 \
 \
-You can also run it via command prompt:
+You can clone the repo, or run the game via command prompt:
 ```
 go run github.com/rafaeletec/go_tictactoe@latest
 ```
