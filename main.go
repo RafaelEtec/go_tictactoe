@@ -195,8 +195,7 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeigh
 func main() {
 	firstToPlay := rand.Intn(2) + 1
 
-	url := "https://github.com/RafaelEtec/go_tictactoe/blob/master/tiles.png?raw=true"
-	tile, err := ebitenutil.NewImageFromURL(url)
+	tile, _, err := ebitenutil.NewImageFromFile("tiles.png")
 	if err != nil {
 		log.Fatal(err)
 	}
